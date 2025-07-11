@@ -383,36 +383,28 @@ export default function EmergencyFundBuilder() {
                 </div>
 
                 {/* Progress Bar */}
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-4">Your Progress to Emergency Fund Goal</h4>
-                  <div className="relative bg-gray-200 rounded-full h-8 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-green-500 to-green-600 h-full flex items-center justify-center text-white font-bold text-sm transition-all duration-500"
-                      style={{ width: `${results.progressPercentage}%` }}
-                    >
-                      {results.progressPercentage.toFixed(1)}% Complete
-                    </div>
-                    {/* Milestone markers */}
-                    {[25, 50, 75, 100].map((percent) => (
-                      <div
-                        key={percent}
-                        className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-10"
-                        style={{ left: `${percent}%` }}
-                      >
-                        <div className="absolute -top-6 -left-4 bg-red-500 text-white text-xs px-1 rounded">
-                          {percent}%
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex justify-between mt-3 text-gray-600 text-sm">
-                    <span>$0</span>
-                    <span>${(results.targetAmount * 0.25).toLocaleString()}</span>
-                    <span>${(results.targetAmount * 0.5).toLocaleString()}</span>
-                    <span>${(results.targetAmount * 0.75).toLocaleString()}</span>
-                    <span>${results.targetAmount.toLocaleString()}</span>
-                  </div>
-                </div>
+                <div className="relative bg-gray-200 rounded-full h-8 overflow-hidden">
+  <div
+    className="bg-gradient-to-r from-green-500 to-green-600 h-full text-white font-bold text-sm transition-all duration-500 pl-3 flex items-center"
+    style={{ width: `${results.progressPercentage}%`, minWidth: "4rem" }} // Ensures visibility
+  >
+    {results.progressPercentage.toFixed(1)}% Complete
+  </div>
+
+  {/* Milestone markers */}
+  {[25, 50, 75, 100].map((percent) => (
+    <div
+      key={percent}
+      className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-10"
+      style={{ left: `${percent}%` }}
+    >
+      <div className="absolute -top-6 -left-4 bg-red-500 text-white text-xs px-1 rounded">
+        {percent}%
+      </div>
+    </div>
+  ))}
+</div>
+
 
                 {/* Savings Strategies or Congratulations */}
                 {results.amountNeeded > 0 ? (
