@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import Goals from "../../../components/Goals"
+import Anaylsis from "../../../components/Anaylsis"
 
 interface Expense {
   id: string
@@ -10,13 +12,6 @@ interface Expense {
   category: string
 }
 
-interface Goal {
-  id: string
-  name: string
-  target: number
-  current: number
-  targetDate: string
-}
 
 interface BudgetData {
   primaryIncome: number
@@ -44,7 +39,7 @@ interface BudgetData {
 export default function BudgetPlanner() {
   const [activeTab, setActiveTab] = useState("monthly-budget")
   const [expenses, setExpenses] = useState<Expense[]>([])
-  const [goals, setGoals] = useState<Goal[]>([])
+
   const [budgetData, setBudgetData] = useState<BudgetData>({
     primaryIncome: 5000,
     sideIncome: 0,
@@ -75,12 +70,6 @@ export default function BudgetPlanner() {
     category: "groceries",
   })
 
-  const [goalForm, setGoalForm] = useState({
-    name: "",
-    target: "",
-    current: "",
-    targetDate: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-  })
 
   const calculateBudgetSummary = () => {
     const totalIncome =
@@ -145,26 +134,6 @@ export default function BudgetPlanner() {
     setExpenses(expenses.filter((expense) => expense.id !== id))
   }
 
-  const addGoal = () => {
-    if (!goalForm.name || !goalForm.target) return
-
-    const newGoal: Goal = {
-      id: Date.now().toString(),
-      name: goalForm.name,
-      target: Number.parseFloat(goalForm.target),
-      current: Number.parseFloat(goalForm.current) || 0,
-      targetDate: goalForm.targetDate,
-    }
-
-    setGoals([...goals, newGoal])
-    setGoalForm({
-      name: "",
-      target: "",
-      current: "",
-      targetDate: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-    })
-  }
-
   const updateBudgetField = (field: keyof BudgetData, value: string) => {
     setBudgetData({
       ...budgetData,
@@ -182,40 +151,7 @@ export default function BudgetPlanner() {
     largest: expenses.length > 0 ? Math.max(...expenses.map((e) => e.amount)) : 0,
   }
 
-  const getRecommendations = () => {
-    const recommendations = []
-
-    if (summary.needsPercentage > 50) {
-      recommendations.push("Your needs exceed 50% of income. Consider reducing housing or transportation costs.")
-    }
-    if (summary.wantsPercentage > 30) {
-      recommendations.push("Your wants exceed 30% of income. Try cutting back on dining out or entertainment.")
-    }
-    if (summary.savingsPercentage < 20) {
-      recommendations.push("Increase your savings rate to at least 20% for better financial security.")
-    }
-    if (summary.remaining < 0) {
-      recommendations.push("You're spending more than you earn. Review and cut unnecessary expenses immediately.")
-    }
-    if (summary.savingsPercentage >= 20 && summary.needsPercentage <= 50 && summary.wantsPercentage <= 30) {
-      recommendations.push("Excellent! You're following the 50/30/20 rule perfectly.")
-    }
-
-    return recommendations.length > 0
-      ? recommendations
-      : ["Enter your budget information to receive personalized recommendations"]
-  }
-
-  const getBudgetHealthScore = () => {
-    let score = 100
-
-    if (summary.needsPercentage > 50) score -= 20
-    if (summary.wantsPercentage > 30) score -= 15
-    if (summary.savingsPercentage < 20) score -= 25
-    if (summary.remaining < 0) score -= 40
-
-    return Math.max(0, score)
-  }
+ 
 
   return (
     <div className="min-h-screen bg-white p-5 font-sans">
@@ -227,26 +163,26 @@ export default function BudgetPlanner() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex bg-gray-50 border-b border-gray-200">
-          {[
-            { id: "monthly-budget", label: "Monthly Budget" },
-            { id: "expense-tracker", label: "Expense Tracker" },
-            { id: "analysis", label: "Analysis & Insights" },
-            { id: "goals", label: "Financial Goals" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-4 font-semibold text-base transition-all duration-300 border-b-4 ${
-                activeTab === tab.id
-                  ? "text-slate-800 bg-white border-blue-500"
-                  : "text-gray-600 bg-gray-50 border-transparent hover:text-slate-800 hover:bg-gray-100"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+       <div className="flex overflow-x-auto whitespace-nowrap bg-gray-50 border-b border-gray-200">
+  {[
+    { id: "monthly-budget", label: "Monthly Budget" },
+    { id: "expense-tracker", label: "Expense Tracker" },
+    { id: "analysis", label: "Analysis & Insights" },
+    { id: "goals", label: "Financial Goals" },
+  ].map((tab) => (
+    <button
+      key={tab.id}
+      onClick={() => setActiveTab(tab.id)}
+      className={`px-6 py-4 font-semibold text-base transition-all duration-300 border-b-4 focus:outline-none focus:ring-0 ${
+        activeTab === tab.id
+          ? "text-slate-800 bg-white border-blue-500"
+          : "text-gray-600 bg-gray-50 border-transparent hover:text-slate-800 hover:bg-gray-100"
+      }`}
+    >
+      {tab.label}
+    </button>
+  ))}
+</div>
 
         {/* Monthly Budget Tab */}
         {activeTab === "monthly-budget" && (
@@ -414,98 +350,107 @@ export default function BudgetPlanner() {
             </div>
 
             {/* Summary Dashboard */}
-            <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-8">
-              <h3 className="text-center text-2xl font-bold text-slate-800 mb-6">📈 Budget Summary</h3>
+             {/* ------ Summary Dashboard ------ */}
+    <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 sm:p-8">
+      <h3 className="text-center text-xl sm:text-2xl font-bold text-slate-800 mb-4 sm:mb-6">
+        📈 Budget Summary
+      </h3>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white rounded-lg p-6 text-center shadow-sm">
-                  <div className="text-3xl font-bold text-green-600 mb-2">${summary.totalIncome.toLocaleString()}</div>
-                  <div className="text-gray-600 text-sm">Total Income</div>
-                </div>
-                <div className="bg-white rounded-lg p-6 text-center shadow-sm">
-                  <div className="text-3xl font-bold text-slate-700 mb-2">
-                    ${summary.totalExpenses.toLocaleString()}
-                  </div>
-                  <div className="text-gray-600 text-sm">Total Expenses</div>
-                </div>
-                <div className="bg-white rounded-lg p-6 text-center shadow-sm">
-                  <div
-                    className={`text-3xl font-bold mb-2 ${summary.remaining >= 0 ? "text-green-600" : "text-red-600"}`}
-                  >
-                    ${summary.remaining.toLocaleString()}
-                  </div>
-                  <div className="text-gray-600 text-sm">Remaining Balance</div>
-                </div>
-                <div className="bg-white rounded-lg p-6 text-center shadow-sm">
-                  <div className="text-3xl font-bold text-slate-700 mb-2">{summary.savingsPercentage.toFixed(1)}%</div>
-                  <div className="text-gray-600 text-sm">Savings Rate</div>
-                </div>
-              </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        {/* Total Income */}
+        <div className="bg-white rounded-lg p-4 sm:p-6 text-center shadow-sm">
+          <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-1 sm:mb-2">
+            ${summary.totalIncome.toLocaleString()}
+          </div>
+          <div className="text-gray-600 text-xs sm:text-sm">Total Income</div>
+        </div>
+        {/* Total Expenses */}
+        <div className="bg-white rounded-lg p-4 sm:p-6 text-center shadow-sm">
+          <div className="text-2xl sm:text-3xl font-bold text-slate-700 mb-1 sm:mb-2">
+            ${summary.totalExpenses.toLocaleString()}
+          </div>
+          <div className="text-gray-600 text-xs sm:text-sm">Total Expenses</div>
+        </div>
+        {/* Remaining */}
+        <div className="bg-white rounded-lg p-4 sm:p-6 text-center shadow-sm">
+          <div
+            className={`text-2xl sm:text-3xl font-bold mb-1 sm:mb-2 ${
+              summary.remaining >= 0 ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            ${summary.remaining.toLocaleString()}
+          </div>
+          <div className="text-gray-600 text-xs sm:text-sm">Remaining Balance</div>
+        </div>
+        {/* Savings Rate */}
+        <div className="bg-white rounded-lg p-4 sm:p-6 text-center shadow-sm">
+          <div className="text-2xl sm:text-3xl font-bold text-slate-700 mb-1 sm:mb-2">
+            {summary.savingsPercentage.toFixed(1)}%
+          </div>
+          <div className="text-gray-600 text-xs sm:text-sm">Savings Rate</div>
+        </div>
+      </div>
 
-              {/* Progress Bars */}
-              <div className="space-y-6">
-                <h4 className="text-slate-800 font-bold text-lg mb-4">Budget Allocation Breakdown</h4>
+      {/* Allocation Progress Bars */}
+      <div className="space-y-4 sm:space-y-6">
+        <h4 className="text-slate-800 font-bold text-base sm:text-lg mb-3 sm:mb-4">
+          Budget Allocation Breakdown
+        </h4>
 
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-slate-700">Needs (Target: 50%)</span>
-                    <span className="font-semibold">{summary.needsPercentage.toFixed(1)}%</span>
-                  </div>
-                  <div className="bg-gray-200 rounded-full h-6 overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center text-white text-sm font-bold transition-all duration-500"
-                      style={{ width: `${Math.min(summary.needsPercentage, 100)}%` }}
-                    >
-                      {summary.needsPercentage.toFixed(1)}%
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-slate-700">Wants (Target: 30%)</span>
-                    <span className="font-semibold">{summary.wantsPercentage.toFixed(1)}%</span>
-                  </div>
-                  <div className="bg-gray-200 rounded-full h-6 overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center text-white text-sm font-bold transition-all duration-500"
-                      style={{ width: `${Math.min(summary.wantsPercentage, 100)}%` }}
-                    >
-                      {summary.wantsPercentage.toFixed(1)}%
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-slate-700">Savings & Debt (Target: 20%)</span>
-                    <span className="font-semibold">{summary.savingsPercentage.toFixed(1)}%</span>
-                  </div>
-                  <div className="bg-gray-200 rounded-full h-6 overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center text-white text-sm font-bold transition-all duration-500"
-                      style={{ width: `${Math.min(summary.savingsPercentage, 100)}%` }}
-                    >
-                      {summary.savingsPercentage.toFixed(1)}%
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Budget Alerts */}
-              <div className="mt-6">
-                {summary.remaining < 0 && (
-                  <div className="bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-lg font-semibold">
-                    ⚠️ Warning: You're spending more than you earn!
-                  </div>
-                )}
-                {summary.savingsPercentage >= 20 && summary.needsPercentage <= 50 && summary.wantsPercentage <= 30 && (
-                  <div className="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-lg font-semibold">
-                    ✅ Excellent! You're following the 50/30/20 rule perfectly.
-                  </div>
-                )}
+        {[
+          {
+            label: "Needs (Target: 50%)",
+            value: summary.needsPercentage,
+            colors: "from-red-500 to-red-600",
+          },
+          {
+            label: "Wants (Target: 30%)",
+            value: summary.wantsPercentage,
+            colors: "from-green-500 to-green-600",
+          },
+          {
+            label: "Savings & Debt (Target: 20%)",
+            value: summary.savingsPercentage,
+            colors: "from-orange-500 to-orange-600",
+          },
+        ].map(({ label, value, colors }) => (
+          <div key={label}>
+            <div className="flex justify-between mb-1 sm:mb-2">
+              <span className="text-slate-700 text-xs sm:text-sm">{label}</span>
+              <span className="font-semibold text-xs sm:text-sm">
+                {value.toFixed(1)}%
+              </span>
+            </div>
+            <div className="bg-gray-200 rounded-full h-4 sm:h-6 overflow-hidden">
+              <div
+                className={`h-full bg-gradient-to-r ${colors} flex items-center justify-center text-white text-[10px] sm:text-xs font-bold transition-all duration-500`}
+                style={{ width: `${Math.min(value, 100)}%` }}
+              >
+                {value.toFixed(1)}%
               </div>
             </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Budget Alerts */}
+      <div className="mt-4 sm:mt-6">
+        {summary.remaining < 0 && (
+          <div className="bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-lg font-semibold text-xs sm:text-sm">
+            ⚠️ Warning: You're spending more than you earn!
+          </div>
+        )}
+        {summary.savingsPercentage >= 20 &&
+          summary.needsPercentage <= 50 &&
+          summary.wantsPercentage <= 30 && (
+            <div className="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-lg font-semibold text-xs sm:text-sm">
+              ✅ Excellent! You’re following the 50/30/20 rule perfectly.
+            </div>
+          )}
+      </div>
+    </div>
+
           </div>
         )}
 
@@ -641,205 +586,11 @@ export default function BudgetPlanner() {
         )}
 
         {/* Analysis Tab */}
-        {activeTab === "analysis" && (
-          <div className="p-8">
-            <h2 className="text-2xl font-bold text-slate-800 mb-6">📊 Budget Analysis & Insights</h2>
-
-            {/* Recommendations */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-              <h4 className="text-lg font-bold text-slate-800 mb-4">💡 Personalized Recommendations</h4>
-              <ul className="space-y-3">
-                {getRecommendations().map((recommendation, index) => (
-                  <li key={index} className="text-gray-700 pb-3 border-b border-blue-100 last:border-b-0">
-                    {recommendation}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Category Analysis */}
-              <div>
-                <h4 className="text-lg font-bold text-slate-800 mb-4">Category Spending Analysis</h4>
-                <div className="bg-white rounded-lg p-6 shadow-sm">
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                      <span className="font-semibold text-slate-800">Needs</span>
-                      <div className="text-right">
-                        <div className="font-bold  text-gray-700">${summary.needs.toLocaleString()}</div>
-                        <div className="text-sm text-gray-600">{summary.needsPercentage.toFixed(1)}%</div>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                      <span className="font-semibold text-slate-800">Wants</span>
-                      <div className="text-right">
-                        <div className="font-bold text-gray-700">${summary.wants.toLocaleString()}</div>
-                        <div className="text-sm text-gray-600">{summary.wantsPercentage.toFixed(1)}%</div>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                      <span className="font-semibold text-slate-800">Savings & Debt</span>
-                      <div className="text-right">
-                        <div className="font-bold  text-gray-700">${summary.savings.toLocaleString()}</div>
-                        <div className="text-sm text-gray-600">{summary.savingsPercentage.toFixed(1)}%</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Budget Health Score */}
-              <div>
-                <h4 className="text-lg font-bold text-slate-800 mb-4">Budget Health Score</h4>
-                <div className="bg-white rounded-lg p-6 shadow-sm">
-                  <div className="text-center">
-                    <div
-                      className={`text-6xl font-bold mb-4 ${
-                        getBudgetHealthScore() >= 80
-                          ? "text-green-600"
-                          : getBudgetHealthScore() >= 60
-                            ? "text-yellow-600"
-                            : "text-red-600"
-                      }`}
-                    >
-                      {getBudgetHealthScore()}
-                    </div>
-                    <div className="text-gray-600 mb-4">out of 100</div>
-                    <div
-                      className={`px-4 py-2 rounded-full text-white font-semibold ${
-                        getBudgetHealthScore() >= 80
-                          ? "bg-green-500"
-                          : getBudgetHealthScore() >= 60
-                            ? "bg-yellow-500"
-                            : "bg-red-500"
-                      }`}
-                    >
-                      {getBudgetHealthScore() >= 80
-                        ? "Excellent"
-                        : getBudgetHealthScore() >= 60
-                          ? "Good"
-                          : "Needs Improvement"}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {activeTab === "analysis" &&(<Anaylsis/>)}
 
         {/* Goals Tab */}
-        {activeTab === "goals" && (
-          <div className="p-8">
-            <h2 className="text-2xl font-bold text-slate-800 mb-6">🎯 Financial Goals Tracker</h2>
-
-            {/* Add Goal Form */}
-            <div className="bg-gray-50 p-6 rounded-lg mb-6">
-              <h4 className="font-bold text-lg mb-4 text-slate-800">Add New Goal</h4>
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-800 mb-1">Goal Name</label>
-                  <input
-                    type="text"
-                    value={goalForm.name}
-                    onChange={(e) => setGoalForm({ ...goalForm, name: e.target.value })}
-                    placeholder="Emergency Fund, Vacation, etc."
-                    className="w-full p-3 border-2 text-gray-700 border-gray-200 rounded-md focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-800 mb-1">Target Amount ($)</label>
-                  <input
-                    type="number"
-                    value={goalForm.target}
-                    onChange={(e) => setGoalForm({ ...goalForm, target: e.target.value })}
-                    placeholder="10000"
-                    step="0.01"
-                    className="w-full p-3 border-2 text-gray-700 border-gray-200 rounded-md focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-800 mb-1">Current Amount ($)</label>
-                  <input
-                    type="number"
-                    value={goalForm.current}
-                    onChange={(e) => setGoalForm({ ...goalForm, current: e.target.value })}
-                    placeholder="0"
-                    step="0.01"
-                    className="w-full p-3 text-gray-700 border-2 border-gray-200 rounded-md focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-800 mb-1">Target Date</label>
-                  <input
-                    type="date"
-                    value={goalForm.targetDate}
-                    onChange={(e) => setGoalForm({ ...goalForm, targetDate: e.target.value })}
-                    className="w-full p-3 border-2 text-gray-700 border-gray-200 rounded-md focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <button
-                    onClick={addGoal}
-                    className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-md font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-200 transform hover:-translate-y-1"
-                  >
-                    Add Goal
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Goals List */}
-            <div className="space-y-6">
-              {goals.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  No financial goals set yet. Add your first goal above!
-                </div>
-              ) : (
-                goals.map((goal) => {
-                  const progress = (goal.current / goal.target) * 100
-                  const daysLeft = Math.ceil(
-                    (new Date(goal.targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
-                  )
-
-                  return (
-                    <div key={goal.id} className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-xl font-bold text-slate-800">{goal.name}</h3>
-                          <p className="text-gray-600">
-                            Target: {goal.targetDate} ({daysLeft > 0 ? `${daysLeft} days left` : "Overdue"})
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-slate-800">${goal.current.toLocaleString()}</div>
-                          <div className="text-gray-600">of ${goal.target.toLocaleString()}</div>
-                        </div>
-                      </div>
-
-                      <div className="mb-4">
-                        <div className="flex justify-between mb-2">
-                          <span className="text-sm font-semibold text-slate-700">Progress</span>
-                          <span className="text-sm font-semibold text-slate-700">{progress.toFixed(1)}%</span>
-                        </div>
-                        <div className="bg-gray-200 rounded-full h-4 overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500"
-                            style={{ width: `${Math.min(progress, 100)}%` }}
-                          ></div>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-between text-sm text-gray-600">
-                        <span>Remaining: ${(goal.target - goal.current).toLocaleString()}</span>
-                        {daysLeft > 0 && <span>Need ${((goal.target - goal.current) / daysLeft).toFixed(2)}/day</span>}
-                      </div>
-                    </div>
-                  )
-                })
-              )}
-            </div>
-          </div>
-        )}
+        {activeTab === "goals" && (<Goals/>)}
+        
       </div>
     </div>
   )
