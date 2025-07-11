@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Button from "../../../components/button"
 
 interface Debt {
   id: number
@@ -55,6 +56,7 @@ export default function DebtPayoffCalculator() {
     snowball: null,
   })
   const [debtCounter, setDebtCounter] = useState(2)
+  const [showResults, setShowResults] = useState(false)
 
   const addDebt = () => {
     const newId = debtCounter + 1
@@ -189,21 +191,21 @@ export default function DebtPayoffCalculator() {
       avalanche: avalancheResults,
       snowball: snowballResults,
     })
+    setShowResults(true)
   }
 
-  // Auto-calculate when inputs change
+  // Initial calculation - don't show results initially
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      calculatePayoff()
-    }, 500)
+    const avalancheResults = calculateDebtPayoff(debts, extraPayment, "avalanche")
+    const snowballResults = calculateDebtPayoff(debts, extraPayment, "snowball")
+    const chosenResults = strategy === "snowball" ? snowballResults : avalancheResults
 
-    return () => clearTimeout(timeoutId)
+    setResults({
+      chosen: chosenResults,
+      avalanche: avalancheResults,
+      snowball: snowballResults,
+    })
   }, [debts, extraPayment, strategy])
-
-  // Initial calculation
-  useEffect(() => {
-    calculatePayoff()
-  }, [])
 
   const totalDebt = debts.reduce((sum, debt) => sum + debt.balance, 0)
   const totalMinimums = debts.reduce((sum, debt) => sum + debt.minimum, 0)
@@ -225,8 +227,8 @@ export default function DebtPayoffCalculator() {
       <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white p-8 text-center">
-          <h1 className="text-4xl font-bold mb-3">💰 Interactive Debt Payoff Calculator</h1>
-          <p className="text-lg opacity-90">Plan your path to financial freedom with precision and confidence</p>
+          <h1 className="text-xl font-bold mb-3 lg:text-4xl md:text-2xl  ">💰 Interactive Debt Payoff Calculator</h1>
+          <p className="text-sm opacity-90 lg:text-lg md:text-sm ">Plan your path to financial freedom with precision and confidence</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
@@ -310,17 +312,21 @@ export default function DebtPayoffCalculator() {
 
             {/* Extra Payment Input */}
             <div className="bg-blue-50 border-2 border-blue-500 rounded-lg p-6 mb-6">
-              <label className="block text-lg font-semibold text-slate-800 mb-2">
-                💪 Extra Monthly Payment Available ($)
-              </label>
-              <input
-                type="number"
-                value={extraPayment}
-                onChange={(e) => setExtraPayment(Number.parseFloat(e.target.value) || 0)}
-                placeholder="200"
-                step="0.01"
-                className="w-full p-3 border-2 border-gray-200 rounded-md focus:border-blue-500 focus:outline-none text-base transition-colors text-slate-800 bg-white"
-              />
+              <div className="flex flex-col lg:flex-row lg:items-center lg:gap-4">
+                <label className="text-lg font-semibold text-slate-800 mb-2 lg:mb-0 lg:flex-shrink-0">
+                  💪 Extra Monthly Payment Available ($)
+                </label>
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    value={extraPayment}
+                    onChange={(e) => setExtraPayment(Number.parseFloat(e.target.value) || 0)}
+                    placeholder="200"
+                    step="0.01"
+                    className="w-full p-3 border-2 border-gray-200 rounded-md focus:border-blue-500 focus:outline-none text-base transition-colors text-slate-800 bg-white"
+                  />
+                </div>
+              </div>
               <small className="text-gray-600 mt-2 block">
                 This amount will be applied to accelerate your debt payoff
               </small>
@@ -380,17 +386,17 @@ export default function DebtPayoffCalculator() {
 
             <button
               onClick={calculatePayoff}
-              className="w-96 bg-blue-400 text-white px-8 py-4 rounded-md text-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:-translate-y-1"
+              className="max-w-4xl w-auto bg-blue-400 text-white px-8 py-4 rounded-md text-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:-translate-y-1"
             >
               🚀 Calculate My Debt Freedom Plan
             </button>
           </div>
 
-          {/* Results Section */}
+         {/* Results Section */}
           <div className="p-8 bg-white">
             <h2 className="text-2xl font-bold text-slate-800 mb-6 pb-3 border-b-2 border-blue-500">📈 Your Results</h2>
 
-            {!results.chosen || results.chosen.totalMonths === 0 ? (
+            {!showResults || !results.chosen || results.chosen.totalMonths === 0 ? (
               <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg font-semibold">
                 Enter your debt information and click "Calculate" to see your personalized debt freedom plan!
               </div>
@@ -401,77 +407,76 @@ export default function DebtPayoffCalculator() {
                   🎉 Your debt freedom plan is ready! You'll be debt-free in {results.chosen.totalMonths} months!
                 </div>
 
+
                 {/* Results Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6 text-center border-l-4 border-blue-500">
-                    <div className="text-3xl font-bold text-slate-800 mb-2">${totalDebt.toLocaleString()}</div>
-                    <div className="text-gray-600 text-sm">Total Debt</div>
-                  </div>
-                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6 text-center border-l-4 border-blue-500">
-                    <div className="text-3xl font-bold text-slate-800 mb-2">{results.chosen.totalMonths}</div>
-                    <div className="text-gray-600 text-sm">Months to Freedom</div>
-                  </div>
-                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6 text-center border-l-4 border-blue-500">
-                    <div className="text-3xl font-bold text-slate-800 mb-2">
-                      ${results.chosen.totalInterestPaid.toLocaleString()}
-                    </div>
-                    <div className="text-gray-600 text-sm">Total Interest Paid</div>
-                  </div>
-                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6 text-center border-l-4 border-blue-500">
-                    <div className="text-3xl font-bold text-slate-800 mb-2">
-                      ${results.chosen.monthlyPayment.toLocaleString()}
-                    </div>
-                    <div className="text-gray-600 text-sm">Monthly Payment</div>
-                  </div>
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6 text-center border-l-4 border-blue-500">
+    <div className="text-3xl font-bold text-slate-800 mb-2">${totalDebt.toLocaleString()}</div>
+    <div className="text-gray-600 text-sm">Total Debt</div>
+  </div>
+  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6 text-center border-l-4 border-blue-500">
+    <div className="text-3xl font-bold text-slate-800 mb-2">{results.chosen.totalMonths}</div>
+    <div className="text-gray-600 text-sm">Months to Freedom</div>
+  </div>
+  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6 text-center border-l-4 border-blue-500">
+    <div className="text-3xl font-bold text-slate-800 mb-2">
+      ${results.chosen.totalInterestPaid.toLocaleString()}
+    </div>
+    <div className="text-gray-600 text-sm">Total Interest Paid</div>
+  </div>
+  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6 text-center border-l-4 border-blue-500">
+    <div className="text-3xl font-bold text-slate-800 mb-2">
+      ${results.chosen.monthlyPayment.toLocaleString()}
+    </div>
+    <div className="text-gray-600 text-sm">Monthly Payment</div>
+  </div>
+</div>
+
 
                 {/* Comparison Table */}
                 {results.avalanche && results.snowball && (
-                  <div className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200">
-                    <table className="w-full">
-                      <thead className="bg-slate-800 text-white">
-                        <tr>
-                          <th className="px-4 py-4 text-left">Strategy</th>
-                          <th className="px-4 py-4 text-left">Time to Freedom</th>
-                          <th className="px-4 py-4 text-left">Total Interest</th>
-                          <th className="px-4 py-4 text-left">Interest Saved</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr
-                          className={`border-b border-gray-100 hover:bg-gray-50 ${
-                            strategy === "avalanche" ? "bg-blue-50 font-bold text-black" : ""
-                          }`}
-                        >
-                          <td className="px-4 py-3 text-slate-700">🔥 Debt Avalanche</td>
-                          <td className="px-4 py-3 text-slate-700">{results.avalanche.totalMonths} months</td>
-                          <td className="px-4 py-3 text-slate-700">${results.avalanche.totalInterestPaid.toLocaleString()}</td>
-                          <td className="px-4 py-3 text-slate-700">
-                            $
-                            {(
-                              results.snowball.totalInterestPaid - results.avalanche.totalInterestPaid
-                            ).toLocaleString()}
-                          </td>
-                        </tr>
-                        <tr
-                          className={`border-b border-gray-100 hover:bg-gray-50 ${
-                            strategy === "snowball" ? "bg-blue-50 font-bold text-black" : ""
-                          }`}
-                        >
-                          <td className="px-4 py-3 text-slate-700">⛄ Debt Snowball</td>
-                          <td className="px-4 py-3 text-slate-700">{results.snowball.totalMonths} months</td>
-                          <td className="px-4 py-3 text-slate-700">${results.snowball.totalInterestPaid.toLocaleString()}</td>
-                          <td className="px-4 py-3 text-slate-700">
-                            $
-                            {(
-                              results.avalanche.totalInterestPaid - results.snowball.totalInterestPaid
-                            ).toLocaleString()}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+  <div className="overflow-x-auto">
+    <div className="min-w-[600px] bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200">
+      <table className="w-full">
+        <thead className="bg-slate-800 text-white">
+          <tr>
+            <th className="px-4 py-4 text-left">Strategy</th>
+            <th className="px-4 py-4 text-left">Time to Freedom</th>
+            <th className="px-4 py-4 text-left">Total Interest</th>
+            <th className="px-4 py-4 text-left">Interest Saved</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            className={`border-b border-gray-100 hover:bg-gray-50 ${
+              strategy === "avalanche" ? "bg-blue-50 font-bold text-black" : ""
+            }`}
+          >
+            <td className="px-4 py-3 text-slate-700">🔥 Debt Avalanche</td>
+            <td className="px-4 py-3 text-slate-700">{results.avalanche.totalMonths} months</td>
+            <td className="px-4 py-3 text-slate-700">${results.avalanche.totalInterestPaid.toLocaleString()}</td>
+            <td className="px-4 py-3 text-slate-700">
+              ${Math.abs(results.snowball.totalInterestPaid - results.avalanche.totalInterestPaid).toLocaleString()}
+            </td>
+          </tr>
+          <tr
+            className={`border-b border-gray-100 hover:bg-gray-50 ${
+              strategy === "snowball" ? "bg-blue-50 font-bold text-black" : ""
+            }`}
+          >
+            <td className="px-4 py-3 text-slate-700">⛄ Debt Snowball</td>
+            <td className="px-4 py-3 text-slate-700">{results.snowball.totalMonths} months</td>
+            <td className="px-4 py-3 text-slate-700">${results.snowball.totalInterestPaid.toLocaleString()}</td>
+            <td className="px-4 py-3 text-slate-700">
+              ${Math.abs(results.avalanche.totalInterestPaid - results.snowball.totalInterestPaid).toLocaleString()}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
+
 
                 {/* Payoff Schedule */}
                 <div className="bg-gray-50 rounded-lg p-6">
@@ -522,24 +527,8 @@ export default function DebtPayoffCalculator() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <button
-                    onClick={() => window.print()}
-                    className="bg-blue-400 text-white px-6 py-3 rounded-md font-semibold hover:from-blue-600 hover:to-blue-700  transition-all duration-200 transform hover:-translate-y-1"
-                  >
-                    🖨️ Print Your Plan
-                  </button>
-                  <button
-                    onClick={() =>
-                      alert(
-                        "PDF export feature would be implemented with a PDF library like jsPDF in a production environment. For now, you can use the print function and save as PDF.",
-                      )
-                    }
-                    className="bg-blue-400 text-white px-6 py-3 rounded-md font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:-translate-y-1"
-                  >
-                    📄 Export to PDF
-                  </button>
-                </div>
+                <Button/>
+
               </div>
             )}
           </div>

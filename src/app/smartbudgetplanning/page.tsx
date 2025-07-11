@@ -222,8 +222,8 @@ export default function BudgetPlanner() {
       <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white p-8 text-center">
-          <h1 className="text-4xl font-bold mb-3">📊 Smart Budget Planning Spreadsheet</h1>
-          <p className="text-lg opacity-90">Take control of your finances with our comprehensive budgeting tool</p>
+          <h1 className="text-xl lg:text-5xl md:text-3xl font-bold mb-3">📊 Smart Budget Planning Spreadsheet</h1>
+          <p className="text-sm lg:text-lg  opacity-90">Take control of your finances with our comprehensive budgeting tool</p>
         </div>
 
         {/* Navigation Tabs */}

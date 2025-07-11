@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Button from "../../../components/button"
 
 interface ExpenseInputs {
   housing: number
@@ -40,6 +41,8 @@ interface SavingsStrategy {
 export default function EmergencyFundBuilder() {
   const [scenario, setScenario] = useState("single-stable")
   const [selectedPlan, setSelectedPlan] = useState(0)
+  const [hasCalculated, setHasCalculated] = useState(false)
+
   const [expenses, setExpenses] = useState<ExpenseInputs>({
     housing: 1500,
     utilities: 200,
@@ -82,10 +85,7 @@ export default function EmergencyFundBuilder() {
   ]
 
   const calculateEmergencyFund = () => {
-    const monthlyEssentials = Object.values(expenses)
-      .slice(0, 7)
-      .reduce((sum, val) => sum + val, 0)
-
+    const monthlyEssentials = Object.values(expenses).slice(0, 7).reduce((sum, val) => sum + val, 0)
     const selectedScenario = scenarios.find((s) => s.id === scenario)!
     const targetMonths = selectedScenario.months
     const targetAmount = monthlyEssentials * targetMonths
@@ -102,12 +102,12 @@ export default function EmergencyFundBuilder() {
       targetMonths,
       scenarioName: selectedScenario.title,
     })
+
+    setHasCalculated(true)
   }
 
   const generateTimeline = (): TimelineItem[] => {
-    if (!results || expenses.monthlyContribution <= 0 || expenses.currentSavings >= results.targetAmount) {
-      return []
-    }
+    if (!results || expenses.monthlyContribution <= 0 || expenses.currentSavings >= results.targetAmount) return []
 
     const timelineItems: TimelineItem[] = []
     let currentAmount = expenses.currentSavings
@@ -162,25 +162,23 @@ export default function EmergencyFundBuilder() {
       ...prev,
       [field]: Number.parseFloat(value) || 0,
     }))
+    setHasCalculated(false)
   }
 
   useEffect(() => {
-    const timer = setTimeout(calculateEmergencyFund, 300)
-    return () => clearTimeout(timer)
-  }, [expenses, scenario])
+    setHasCalculated(false)
+  }, [scenario])
 
-  useEffect(() => {
-    calculateEmergencyFund()
-  }, [])
+  const timeline = hasCalculated ? generateTimeline() : []
+  const strategies = hasCalculated ? generateSavingsStrategies() : []
 
-  const timeline = generateTimeline()
-  const strategies = generateSavingsStrategies()
+
 
   return (
     <div className="min-h-screen bg-white p-5 font-sans">
       <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-8 text-center">
+        <div className="bg-green-400 text-white p-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-3">🛡️ Emergency Fund Builder Tool</h1>
           <p className="text-lg opacity-90">Build your financial safety net with confidence and clarity</p>
         </div>
@@ -349,7 +347,8 @@ export default function EmergencyFundBuilder() {
               📊 Your Emergency Fund Plan
             </h2>
 
-            {results ? (
+            {hasCalculated &&  results ? (
+
               <div className="space-y-6">
                 {/* Success Alert */}
                 <div className="bg-green-50 border border-green-200 text-green-800 p-4 rounded-lg font-semibold">
@@ -556,25 +555,13 @@ export default function EmergencyFundBuilder() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-4 text-center">
-                  <button
-                    onClick={() => window.print()}
-                    className="flex-1 bg-blue-400 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
-                  >
-                    🖨️ Print Your Plan
-                  </button>
-                  <button
-                    onClick={() =>
-                      alert(
-                        "Email export feature would be implemented with a backend service. For now, you can use the print function and save as PDF.",
-                      )
-                    }
-                    className="flex-1 bg-blue-400 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
-                  >
-                    📧 Email This Plan
-                  </button>
-                </div>
+              <Button/>
+
+
+
               </div>
+
+
             ) : (
               <div className="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg">
                 Enter your expenses and current savings to see your personalized emergency fund strategy!
